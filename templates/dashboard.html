@@ -28,7 +28,7 @@
           <div class="key">email</div><div class="value">{% if github_email.len() > 0 %}{{ github_email }}{% else %}<span class="muted">not available</span>{% endif %}</div>
           <div class="key">account.created_at</div><div class="value"><time datetime="{{ created_at }}">{{ created_at }}</time></div>
           <div class="key">account.last_login_at</div><div class="value"><time datetime="{{ last_login_at }}">{{ last_login_at }}</time></div>
-          <div class="key">api.base_url</div><div class="value"><span class="api-value api-url">{{ api_base_url }}</span></div>
+          <div class="key">api.base_url</div><div class="value"><span class="api-value api-url">{{ api_base_url }}/v1</span></div>
           <div class="key">api.key</div><div class="value"><span id="api-key" class="api-value api-secret">{{ api_key }}</span></div>
         </div>
 

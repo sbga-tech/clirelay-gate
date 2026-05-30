@@ -22,4 +22,5 @@
 - Keep `config.example.toml` in sync when adding or renaming configuration keys.
 - Treat `migrations/` as a persistence boundary; edits affect existing SQLite deployments.
 - Verify template field changes against `src/templates.rs`; Askama checks `templates/` at compile time.
+- Do not write unit tests.
 - Docker builds with `cargo build --release --locked` and runs `clirelay-gate` with `/app/data` available for SQLite data.

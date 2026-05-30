@@ -21,37 +21,16 @@ impl NonEmptyString {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct HttpUrl {
-    url: Url,
-    trimmed: String,
+#[nutype(validate(predicate = is_http_url), derive(Debug, Clone, AsRef, Deserialize))]
+pub struct HttpUrl(Url);
+
+fn is_http_url(url: &Url) -> bool {
+    matches!(url.scheme(), "http" | "https")
 }
 
 impl HttpUrl {
     pub fn as_str(&self) -> &str {
-        &self.trimmed
-    }
-}
-
-impl AsRef<Url> for HttpUrl {
-    fn as_ref(&self) -> &Url {
-        &self.url
-    }
-}
-
-impl<'de> Deserialize<'de> for HttpUrl {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let raw = String::deserialize(deserializer)?;
-        let input = raw.trim().trim_end_matches('/');
-        let url = Url::parse(input).map_err(serde::de::Error::custom)?;
-        if !matches!(url.scheme(), "http" | "https") {
-            return Err(serde::de::Error::custom("URL scheme must be http or https"));
-        }
-        let trimmed = url.as_str().trim_end_matches('/').to_owned();
-        Ok(Self { url, trimmed })
+        self.as_ref().as_str().trim_end_matches('/')
     }
 }
 

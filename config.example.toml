@@ -1,0 +1,28 @@
+[server]
+listen = "0.0.0.0:8080"
+public_base_url = "https://ai.example.com"
+site_name = "CliRelay Gate"
+
+[server.session]
+cookie_name = "clirelay_gate"
+secure = true
+ttl_seconds = 2592000
+
+[github]
+client_id = ""
+client_secret = ""
+
+[clirelay]
+public_base_url = "https://ai.example.com"
+internal_base_url = "http://127.0.0.1:8317"
+management_key = ""
+default_permission_profile_id = ""
+default_allowed_channel_groups = []
+
+[database]
+url = "sqlite://./data/clirelay-gate.db"
+
+[security]
+# Generate 32 random bytes and encode them with base64 or base64url.
+api_key_encryption_key = ""
+api_key_prefix = "sk-ghu-"

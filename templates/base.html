@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ site_name }}</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0a0a;
+      --panel: #111111;
+      --panel-2: #151515;
+      --fg: #d7d7d7;
+      --muted: #7a7a7a;
+      --line: #2a2a2a;
+      --green: #7ee787;
+      --yellow: #e3b341;
+      --blue: #79c0ff;
+      --red: #ff7b72;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 16% 0%, rgba(126, 231, 135, .07), transparent 34rem),
+        radial-gradient(circle at 85% 100%, rgba(121, 192, 255, .07), transparent 30rem),
+        var(--bg);
+      color: var(--fg);
+      font: 15px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    main { width: min(94vw, 920px); margin: 0 auto; padding: 36px 0; }
+    .shell { border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(180deg, var(--panel), var(--panel-2)); box-shadow: 0 24px 80px rgba(0, 0, 0, .42); overflow: hidden; }
+    .bar { display: flex; gap: 8px; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--line); color: var(--muted); }
+    .bar-title { margin-left: 2px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+    .dot.red { background: var(--red); }
+    .dot.yellow { background: var(--yellow); }
+    .dot.green { background: var(--green); }
+    .content { padding: 28px; }
+    .prompt { color: var(--green); }
+    .muted { color: var(--muted); }
+    h1 { margin: 0; font-size: clamp(1.5rem, 4vw, 2.2rem); line-height: 1.1; letter-spacing: -.035em; }
+    p { margin: 0; color: var(--muted); }
+    a.button, button { border: 1px solid var(--line); border-radius: 12px; padding: .8rem 1rem; font: inherit; font-weight: 800; cursor: pointer; text-decoration: none; }
+    a.button { display: inline-flex; align-items: center; justify-content: center; background: rgba(126, 231, 135, .12); border-color: rgba(126, 231, 135, .45); color: var(--green); }
+    a.button:focus, a.button:hover { background: rgba(126, 231, 135, .2); }
+    button.copy { background: rgba(121, 192, 255, .12); border-color: rgba(121, 192, 255, .45); color: var(--blue); }
+    button.copy:hover { filter: brightness(1.2); }
+    button.logout { background: transparent; color: var(--muted); }
+    form { margin: 0; }
+
+    {% block page_css %}{% endblock %}
+  </style>
+</head>
+<body>
+  <main>
+    <section class="shell">
+      <div class="bar" aria-hidden="true"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="bar-title">{{ site_name }}</span></div>
+      <div class="content">
+        {% block content %}{% endblock %}
+      </div>
+    </section>
+  </main>
+</body>
+</html>

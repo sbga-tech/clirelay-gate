@@ -58,7 +58,7 @@ pub fn hash_secret(secret: &str) -> String {
     hex::encode(hasher.finalize())
 }
 
-const API_KEY_RANDOM_BYTES: usize = 24;
+const API_KEY_RANDOM_BYTES: usize = 16;
 const API_KEY_HEX_CHARS: usize = API_KEY_RANDOM_BYTES * 2;
 
 pub fn generate_api_key(prefix: &str) -> Result<String> {

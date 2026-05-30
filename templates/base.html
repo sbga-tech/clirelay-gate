@@ -65,5 +65,28 @@
       </div>
     </section>
   </main>
+  <script>
+    (() => {
+      const pad2 = (value) => String(value).padStart(2, "0");
+      const offsetLabel = (date) => {
+        const offset = -date.getTimezoneOffset();
+        const sign = offset >= 0 ? "+" : "-";
+        const absolute = Math.abs(offset);
+        return `UTC${sign}${pad2(Math.trunc(absolute / 60))}:${pad2(absolute % 60)}`;
+      };
+      const formatLocalTime = (date) =>
+        `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())} ` +
+        `${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())} ${offsetLabel(date)}`;
+
+      for (const element of document.querySelectorAll("time[datetime]")) {
+        const raw = element.getAttribute("datetime");
+        if (!raw) continue;
+        const date = new Date(raw);
+        if (Number.isNaN(date.getTime())) continue;
+        element.textContent = formatLocalTime(date);
+        element.title = raw;
+      }
+    })();
+  </script>
 </body>
 </html>

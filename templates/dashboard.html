@@ -35,6 +35,6 @@
         <div class="actions">
           <button class="copy" type="button" onclick="navigator.clipboard.writeText(document.getElementById('api-key').textContent)">Copy API key</button>
           <a class="button" href="{{ api_base_url }}/manage/apikey-lookup?key={{ api_key }}">Query usages</a>
-          <form method="post" action="/auth/logout"><button class="logout" type="submit">Log out</button></form>
+          <form method="post" action="/gate/auth/logout"><button class="logout" type="submit">Log out</button></form>
         </div>
 {% endblock %}

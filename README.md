@@ -18,8 +18,8 @@ CliRelay Gate 是给 CliRelay 增加多用户自助使用能力的轻量服务�
 
 目前只支持 Docker 部署。推荐将 CliRelay、CliRelay Gate 放在同一个 Docker Compose 项目中，并通过 Caddy 进行反向代理：
 
-- `/` 和 `/auth/*` 转发到 CliRelay Gate，作为用户登录与取 Key 入口
-- 其他路径转发到 CliRelay，保留原来的兼容 API 服务
+- `/` 转发到 CliRelay Gate 首页，`/gate` 和 `/gate/*` 转发到 CliRelay Gate 的登录与会话路径
+- 其他所有路径转发到 CliRelay，保留原来的兼容 API、管理接口和 Amp 路由
 - CliRelay Gate 通过 Docker 内网访问 CliRelay Management API
 
 ### 1. 准备 GitHub OAuth App
@@ -28,7 +28,7 @@ CliRelay Gate 是给 CliRelay 增加多用户自助使用能力的轻量服务�
 
 ```text
 Homepage URL: https://ai.example.com
-Authorization callback URL: https://ai.example.com/auth/github/callback
+Authorization callback URL: https://ai.example.com/gate/auth/github/callback
 ```
 
 保存 `Client ID` 和 `Client Secret`。
@@ -83,11 +83,8 @@ api_key_prefix = "sk-ghu-"
 
 ```caddyfile
 ai.example.com {
-	handle /auth/* {
-		reverse_proxy clirelay-gate:8080
-	}
-
-	handle / {
+	@gate_paths path / /gate /gate/*
+	handle @gate_paths {
 		reverse_proxy clirelay-gate:8080
 	}
 

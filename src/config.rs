@@ -179,7 +179,7 @@ impl AppConfig {
         self.server
             .public_base_url
             .as_ref()
-            .join("/auth/github/callback")
+            .join("/gate/auth/github/callback")
             .expect("callback path must be a valid URL path")
             .to_string()
     }

@@ -2,8 +2,11 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use clirelay_gate::{
-    clirelay::CliRelayClient, config::AppConfig, crypto::Crypto, db, github::GitHubOAuthClient,
-    routes, state::AppState,
+    clients::{clirelay::CliRelayClient, github::GitHubOAuthClient},
+    config::AppConfig,
+    crypto::Crypto,
+    db, routes,
+    state::AppState,
 };
 use time::Duration;
 use tower_http::trace::TraceLayer;

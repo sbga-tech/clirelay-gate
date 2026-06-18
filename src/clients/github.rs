@@ -6,9 +6,9 @@ use serde::Deserialize;
 use url::Url;
 
 use crate::{
+    clients::http,
     config::GitHubConfig,
     error::{AppError, AppResult},
-    http,
 };
 
 const AUTHORIZE_URL: &str = "https://github.com/login/oauth/authorize";

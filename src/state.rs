@@ -3,7 +3,9 @@ use std::sync::Arc;
 use sqlx::SqlitePool;
 
 use crate::{
-    clirelay::CliRelayClient, config::AppConfig, crypto::Crypto, github::GitHubOAuthClient,
+    clients::{clirelay::CliRelayClient, github::GitHubOAuthClient},
+    config::AppConfig,
+    crypto::Crypto,
 };
 
 #[derive(Clone)]

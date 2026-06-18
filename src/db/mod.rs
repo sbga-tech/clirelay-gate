@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{path::PathBuf, str::FromStr};
 
 use anyhow::{Context, Result};
 use sqlx::{
@@ -7,7 +7,7 @@ use sqlx::{
 };
 use time::OffsetDateTime;
 
-use crate::{config::sqlite_file_path, crypto::hash_secret};
+use crate::crypto::hash_secret;
 
 #[derive(Debug, Clone)]
 pub struct User {
@@ -68,6 +68,19 @@ pub async fn connect(database_url: &str) -> Result<SqlitePool> {
         .await?;
     sqlx::migrate!("./migrations").run(&pool).await?;
     Ok(pool)
+}
+
+fn sqlite_file_path(database_url: &str) -> Option<PathBuf> {
+    let without_query = database_url
+        .split_once('?')
+        .map_or(database_url, |(left, _)| left);
+    let path = without_query
+        .strip_prefix("sqlite://")
+        .or_else(|| without_query.strip_prefix("sqlite:"))?;
+    if path == ":memory:" || path.is_empty() {
+        return None;
+    }
+    Some(PathBuf::from(path))
 }
 
 pub async fn get_user_by_id(pool: &SqlitePool, id: i64) -> Result<Option<User>, sqlx::Error> {

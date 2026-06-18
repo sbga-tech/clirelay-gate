@@ -7,9 +7,9 @@ use serde::Serialize;
 use url::Url;
 
 use crate::{
+    clients::http,
     config::CliRelayConfig,
     error::{AppError, AppResult},
-    http,
 };
 
 const MANAGEMENT_BASE_PATH: &str = "/v0/management/";

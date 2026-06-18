@@ -1,4 +1,7 @@
 use askama::Template;
+use axum::response::{Html, IntoResponse, Response};
+
+use crate::error::AppResult;
 
 #[derive(Debug, Template)]
 #[template(path = "login.html")]
@@ -19,4 +22,8 @@ pub struct DashboardTemplate<'a> {
     pub api_base_url: &'a str,
     pub created_at: &'a str,
     pub last_login_at: &'a str,
+}
+
+pub(crate) fn render<T: Template>(template: T) -> AppResult<Response> {
+    Ok(Html(template.render()?).into_response())
 }

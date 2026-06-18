@@ -1,10 +1,9 @@
-pub mod clirelay;
+pub mod clients;
 pub mod config;
 pub mod crypto;
 pub mod db;
 pub mod error;
-pub mod github;
-pub mod http;
 pub mod routes;
+pub mod services;
 pub mod state;
 pub mod templates;

@@ -1,4 +1,4 @@
-use std::{env, fmt, net::SocketAddr, num::NonZeroU64, path::PathBuf};
+use std::{env, fmt, net::SocketAddr, num::NonZeroU64};
 
 use anyhow::{Context, Result};
 use base64ct::{Base64, Base64UrlUnpadded, Encoding};
@@ -183,17 +183,4 @@ impl AppConfig {
             .expect("callback path must be a valid URL path")
             .to_string()
     }
-}
-
-pub fn sqlite_file_path(database_url: &str) -> Option<PathBuf> {
-    let without_query = database_url
-        .split_once('?')
-        .map_or(database_url, |(left, _)| left);
-    let path = without_query
-        .strip_prefix("sqlite://")
-        .or_else(|| without_query.strip_prefix("sqlite:"))?;
-    if path == ":memory:" || path.is_empty() {
-        return None;
-    }
-    Some(PathBuf::from(path))
 }

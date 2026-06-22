@@ -1,0 +1,45 @@
+<div id="leaderboard-results">
+  <div class="leaderboard-status">
+    <div>
+      <span class="prompt">&gt;</span>
+      {{ view.period.label() }} by {{ view.metric.label() }}
+      <span class="muted">({{ view.rows.len() }} ranked users)</span>
+    </div>
+    <div id="leaderboard-loading" class="htmx-indicator muted">Loading...</div>
+  </div>
+
+  {% if view.rows.len() == 0 %}
+  <div class="empty">No Gate user usage in this period.</div>
+  {% else %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="rank">#</th>
+          <th>User</th>
+          <th class="number">Tokens</th>
+          <th class="number">Requests</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in view.rows %}
+        <tr>
+          <td class="rank">{{ row.rank }}</td>
+          <td>
+            <div class="user-cell">
+              {% if row.avatar_url.len() > 0 %}<img class="avatar" src="{{ row.avatar_url }}" alt="{{ row.github_login }} avatar">{% endif %}
+              <div>
+                <div class="login">{{ row.github_login }}</div>
+                {% if row.github_name.len() > 0 %}<div class="muted">{{ row.github_name }}</div>{% endif %}
+              </div>
+            </div>
+          </td>
+          <td class="number">{{ row.tokens_label() }}</td>
+          <td class="number">{{ row.requests_label() }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>

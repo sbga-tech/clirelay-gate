@@ -3,7 +3,7 @@ use reqwest::{
     header::{AUTHORIZATION, HeaderMap, HeaderValue},
 };
 use secrecy::ExposeSecret;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 
 use crate::{
@@ -14,6 +14,7 @@ use crate::{
 
 const MANAGEMENT_BASE_PATH: &str = "/v0/management/";
 const API_KEY_ENTRIES_PATH: &str = "api-key-entries";
+const USAGE_CHART_DATA_PATH: &str = "usage/chart-data";
 
 #[derive(Clone)]
 pub struct CliRelayClient {
@@ -77,11 +78,43 @@ impl CliRelayClient {
         )))
     }
 
+    pub async fn usage_chart_data(&self, days: u16) -> AppResult<CliRelayUsageChartData> {
+        let mut url = self.url(USAGE_CHART_DATA_PATH);
+        url.query_pairs_mut().append_pair("days", &days.to_string());
+
+        let response = self.http.get(url).send().await?;
+
+        if response.status().is_success() {
+            return Ok(response.json().await?);
+        }
+
+        let status = response.status();
+        let text = response.text().await.unwrap_or_default();
+        Err(AppError::Upstream(format!(
+            "CliRelay usage query failed with {status}: {text}"
+        )))
+    }
+
     fn url(&self, path: &str) -> Url {
         self.base_url
             .join(path)
             .expect("management API path must be relative")
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CliRelayUsageChartData {
+    #[serde(default)]
+    pub apikey_distribution: Vec<CliRelayApiKeyDistribution>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CliRelayApiKeyDistribution {
+    pub api_key: String,
+    #[serde(default)]
+    pub requests: i64,
+    #[serde(default)]
+    pub tokens: i64,
 }
 
 #[derive(Debug, Serialize)]

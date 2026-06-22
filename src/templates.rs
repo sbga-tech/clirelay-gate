@@ -1,7 +1,7 @@
 use askama::Template;
 use axum::response::{Html, IntoResponse, Response};
 
-use crate::error::AppResult;
+use crate::{error::AppResult, services::leaderboard::LeaderboardView};
 
 #[derive(Debug, Template)]
 #[template(path = "login.html")]
@@ -22,6 +22,19 @@ pub struct DashboardTemplate<'a> {
     pub api_base_url: &'a str,
     pub created_at: &'a str,
     pub last_login_at: &'a str,
+}
+
+#[derive(Debug, Template)]
+#[template(path = "leaderboard.html")]
+pub struct LeaderboardTemplate<'a> {
+    pub site_name: &'a str,
+    pub view: LeaderboardView,
+}
+
+#[derive(Debug, Template)]
+#[template(path = "leaderboard_table.html")]
+pub struct LeaderboardTableTemplate {
+    pub view: LeaderboardView,
 }
 
 pub(crate) fn render<T: Template>(template: T) -> AppResult<Response> {

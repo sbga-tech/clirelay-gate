@@ -13,6 +13,7 @@ use crate::{
 };
 
 const MANAGEMENT_BASE_PATH: &str = "/v0/management/";
+const API_KEYS_PATH: &str = "api-keys";
 const API_KEY_ENTRIES_PATH: &str = "api-key-entries";
 const USAGE_CHART_DATA_PATH: &str = "usage/chart-data";
 
@@ -50,6 +51,35 @@ impl CliRelayClient {
     }
 
     pub async fn provision_api_key(&self, api_key: &str, name: &str) -> AppResult<()> {
+        self.create_api_key(api_key).await?;
+        self.update_api_key_entry(api_key, name).await
+    }
+
+    async fn create_api_key(&self, api_key: &str) -> AppResult<()> {
+        let body = ApiKeyPatch {
+            old_key: "",
+            new_key: api_key,
+        };
+
+        let response = self
+            .http
+            .patch(self.url(API_KEYS_PATH))
+            .json(&body)
+            .send()
+            .await?;
+
+        if response.status().is_success() {
+            return Ok(());
+        }
+
+        let status = response.status();
+        let text = response.text().await.unwrap_or_default();
+        Err(AppError::Upstream(format!(
+            "CliRelay API key creation failed with {status}: {text}"
+        )))
+    }
+
+    async fn update_api_key_entry(&self, api_key: &str, name: &str) -> AppResult<()> {
         let body = ApiKeyEntryPatch {
             match_key: api_key,
             value: ApiKeyEntryValue {
@@ -74,7 +104,7 @@ impl CliRelayClient {
         let status = response.status();
         let text = response.text().await.unwrap_or_default();
         Err(AppError::Upstream(format!(
-            "CliRelay API key provisioning failed with {status}: {text}"
+            "CliRelay API key metadata update failed with {status}: {text}"
         )))
     }
 
@@ -115,6 +145,14 @@ pub struct CliRelayApiKeyDistribution {
     pub requests: i64,
     #[serde(default)]
     pub tokens: i64,
+}
+
+#[derive(Debug, Serialize)]
+struct ApiKeyPatch<'a> {
+    #[serde(rename = "old")]
+    old_key: &'a str,
+    #[serde(rename = "new")]
+    new_key: &'a str,
 }
 
 #[derive(Debug, Serialize)]

@@ -1,4 +1,19 @@
 <div id="leaderboard-results">
+  <form class="controls" hx-get="/gate/leaderboard/table" hx-trigger="change" hx-target="#leaderboard-results" hx-swap="outerHTML" hx-indicator="#leaderboard-loading">
+    <fieldset>
+      <legend>Period</legend>
+      {% for choice in view.period_choices %}
+      <label class="choice"><input type="radio" name="period" value="{{ choice.value }}"{% if choice.selected %} checked{% endif %}> {{ choice.label }}</label>
+      {% endfor %}
+    </fieldset>
+    <fieldset>
+      <legend>Rank by</legend>
+      {% for choice in view.metric_choices %}
+      <label class="choice"><input type="radio" name="metric" value="{{ choice.value }}"{% if choice.selected %} checked{% endif %}> {{ choice.label }}</label>
+      {% endfor %}
+    </fieldset>
+  </form>
+
   <div class="leaderboard-status">
     <div>
       <span class="prompt">&gt;</span>

@@ -28,7 +28,6 @@ pub struct DashboardTemplate<'a> {
 #[template(path = "leaderboard.html")]
 pub struct LeaderboardTemplate<'a> {
     pub site_name: &'a str,
-    pub view: LeaderboardView,
 }
 
 #[derive(Debug, Template)]

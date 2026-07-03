@@ -23,12 +23,8 @@ async fn page(
     State(state): State<AppState>,
     RequiredUser(_user): RequiredUser,
 ) -> AppResult<Response> {
-    let query = LeaderboardQuery::default();
-    let view = load_leaderboard(&state, query.period, query.metric).await?;
-
     render(LeaderboardTemplate {
         site_name: state.config.server.site_name.as_ref(),
-        view,
     })
 }
 

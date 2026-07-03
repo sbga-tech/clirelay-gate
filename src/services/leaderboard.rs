@@ -4,7 +4,7 @@ use serde::{Deserialize, Deserializer};
 
 use crate::{db::User, error::AppResult, services::user::decrypt_api_key, state::AppState};
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Clone, Copy, Deserialize, Default)]
 pub struct LeaderboardQuery {
     #[serde(default)]
     pub period: LeaderboardPeriod,
@@ -64,7 +64,7 @@ impl LeaderboardPeriod {
         }
     }
 
-    fn value(self) -> &'static str {
+    pub fn value(self) -> &'static str {
         match self {
             Self::Today => "today",
             Self::SevenDays => "7d",
@@ -106,7 +106,7 @@ impl LeaderboardMetric {
         }
     }
 
-    fn value(self) -> &'static str {
+    pub fn value(self) -> &'static str {
         match self {
             Self::Tokens => "tokens",
             Self::Requests => "requests",

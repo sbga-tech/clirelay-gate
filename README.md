@@ -1,6 +1,6 @@
 # CliRelay Gate
 
-CliRelay Gate 是给 CliRelay 增加多用户自助使用能力的轻量服务。CliRelay 本身专注代理与管理能力，没有完整用户系统；本项目用 GitHub 登录识别用户，自动为用户分配 API Key，并把密钥加密保存到本地 SQLite。
+CliRelay Gate 是给 CliRelay 增加多用户自助使用能力的轻量服务。CliRelay 本身专注代理与管理能力，没有完整用户系统；本项目用 GitHub 登录识别用户，让用户按需创建、轮换或删除 API Key，并在把 CliRelay 中的密钥状态同步到本地 SQLite。
 
 它不代理模型请求，也不替代 CliRelay。实际 API 请求、模型路由、权限配置和用量统计仍由 CliRelay 处理。
 
@@ -8,7 +8,7 @@ CliRelay Gate 是给 CliRelay 增加多用户自助使用能力的轻量服务�
 
 - GitHub OAuth 登录与会话管理
 - 按 GitHub 用户绑定 CliRelay API Key
-- 自动调用 CliRelay Management API 创建 API Key
+- 在用户面板按需创建、轮换和删除 API Key
 - 支持配置默认 permission profile 和 channel groups
 - SQLite 持久化用户、API Key 和会话数据
 - API Key 加密存储

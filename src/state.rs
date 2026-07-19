@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use sqlx::SqlitePool;
+use tokio::sync::Mutex;
 
 use crate::{
     clients::{clirelay::CliRelayClient, github::GitHubOAuthClient},
@@ -15,4 +16,5 @@ pub struct AppState {
     pub db: SqlitePool,
     pub github: Arc<GitHubOAuthClient>,
     pub clirelay: Arc<CliRelayClient>,
+    pub api_key_mutations: Arc<Mutex<()>>,
 }

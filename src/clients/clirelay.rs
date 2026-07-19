@@ -50,9 +50,77 @@ impl CliRelayClient {
         })
     }
 
-    pub async fn provision_api_key(&self, api_key: &str, name: &str) -> AppResult<()> {
+    pub async fn api_key_entries(&self) -> AppResult<Vec<CliRelayApiKeyEntry>> {
+        let response = self.http.get(self.url(API_KEY_ENTRIES_PATH)).send().await?;
+        if !response.status().is_success() {
+            return Err(upstream_response_error(response, "API key list").await);
+        }
+
+        Ok(response
+            .json::<ApiKeyEntriesResponse>()
+            .await?
+            .api_key_entries)
+    }
+
+    pub async fn provision_api_key(
+        &self,
+        api_key: &str,
+        name: &str,
+    ) -> AppResult<CliRelayApiKeyEntry> {
         self.create_api_key(api_key).await?;
-        self.update_api_key_entry(api_key, name).await
+        if let Err(error) = self.update_api_key_metadata(api_key, name).await {
+            if let Err(cleanup_error) = self.delete_api_key_by_key(api_key).await {
+                tracing::warn!(
+                    error = %cleanup_error,
+                    "failed to roll back CliRelay API key after metadata update failure"
+                );
+            }
+            return Err(error);
+        }
+
+        let mut matches = self
+            .api_key_entries()
+            .await?
+            .into_iter()
+            .filter(|entry| entry.key == api_key);
+        let entry = matches.next().ok_or_else(|| {
+            AppError::Upstream("CliRelay did not return the newly created API key".into())
+        })?;
+        if matches.next().is_some() || entry.id.trim().is_empty() {
+            return Err(AppError::Upstream(
+                "CliRelay returned an invalid API key identity".into(),
+            ));
+        }
+        Ok(entry)
+    }
+
+    pub async fn rotate_api_key(&self, id: &str, api_key: &str) -> AppResult<()> {
+        let body = ApiKeyEntryKeyPatch {
+            id,
+            value: ApiKeyEntryKeyValue { key: api_key },
+        };
+        let response = self
+            .http
+            .patch(self.url(API_KEY_ENTRIES_PATH))
+            .json(&body)
+            .send()
+            .await?;
+        if response.status().is_success() {
+            return Ok(());
+        }
+        Err(upstream_response_error(response, "API key rotation").await)
+    }
+
+    pub async fn delete_api_key(&self, id: &str) -> AppResult<()> {
+        let mut url = self.url(API_KEY_ENTRIES_PATH);
+        url.query_pairs_mut()
+            .append_pair("id", id)
+            .append_pair("delete_logs", "false");
+        let response = self.http.delete(url).send().await?;
+        if response.status().is_success() {
+            return Ok(());
+        }
+        Err(upstream_response_error(response, "API key deletion").await)
     }
 
     async fn create_api_key(&self, api_key: &str) -> AppResult<()> {
@@ -60,52 +128,50 @@ impl CliRelayClient {
             old_key: "",
             new_key: api_key,
         };
-
         let response = self
             .http
             .patch(self.url(API_KEYS_PATH))
             .json(&body)
             .send()
             .await?;
-
         if response.status().is_success() {
             return Ok(());
         }
-
-        let status = response.status();
-        let text = response.text().await.unwrap_or_default();
-        Err(AppError::Upstream(format!(
-            "CliRelay API key creation failed with {status}: {text}"
-        )))
+        Err(upstream_response_error(response, "API key creation").await)
     }
 
-    async fn update_api_key_entry(&self, api_key: &str, name: &str) -> AppResult<()> {
-        let body = ApiKeyEntryPatch {
+    async fn update_api_key_metadata(&self, api_key: &str, name: &str) -> AppResult<()> {
+        let body = ApiKeyEntryMetadataPatch {
             match_key: api_key,
-            value: ApiKeyEntryValue {
+            value: ApiKeyEntryMetadataValue {
                 key: api_key,
                 name,
                 permission_profile_id: &self.default_permission_profile_id,
                 allowed_channel_groups: &self.default_allowed_channel_groups,
             },
         };
-
         let response = self
             .http
             .patch(self.url(API_KEY_ENTRIES_PATH))
             .json(&body)
             .send()
             .await?;
-
         if response.status().is_success() {
             return Ok(());
         }
+        Err(upstream_response_error(response, "API key metadata update").await)
+    }
 
-        let status = response.status();
-        let text = response.text().await.unwrap_or_default();
-        Err(AppError::Upstream(format!(
-            "CliRelay API key metadata update failed with {status}: {text}"
-        )))
+    async fn delete_api_key_by_key(&self, api_key: &str) -> AppResult<()> {
+        let mut url = self.url(API_KEY_ENTRIES_PATH);
+        url.query_pairs_mut()
+            .append_pair("key", api_key)
+            .append_pair("delete_logs", "false");
+        let response = self.http.delete(url).send().await?;
+        if response.status().is_success() {
+            return Ok(());
+        }
+        Err(upstream_response_error(response, "API key rollback").await)
     }
 
     pub async fn usage_chart_data(&self, days: u16) -> AppResult<CliRelayUsageChartData> {
@@ -132,6 +198,22 @@ impl CliRelayClient {
     }
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct CliRelayApiKeyEntry {
+    pub id: String,
+    pub key: String,
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub disabled: bool,
+}
+
+#[derive(Debug, Deserialize)]
+struct ApiKeyEntriesResponse {
+    #[serde(rename = "api-key-entries", default)]
+    api_key_entries: Vec<CliRelayApiKeyEntry>,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct CliRelayUsageChartData {
     #[serde(default)]
@@ -156,14 +238,14 @@ struct ApiKeyPatch<'a> {
 }
 
 #[derive(Debug, Serialize)]
-struct ApiKeyEntryPatch<'a> {
+struct ApiKeyEntryMetadataPatch<'a> {
     #[serde(rename = "match")]
     match_key: &'a str,
-    value: ApiKeyEntryValue<'a>,
+    value: ApiKeyEntryMetadataValue<'a>,
 }
 
 #[derive(Debug, Serialize)]
-struct ApiKeyEntryValue<'a> {
+struct ApiKeyEntryMetadataValue<'a> {
     key: &'a str,
     name: &'a str,
     #[serde(
@@ -176,4 +258,21 @@ struct ApiKeyEntryValue<'a> {
         skip_serializing_if = "<[String]>::is_empty"
     )]
     allowed_channel_groups: &'a [String],
+}
+
+#[derive(Debug, Serialize)]
+struct ApiKeyEntryKeyPatch<'a> {
+    id: &'a str,
+    value: ApiKeyEntryKeyValue<'a>,
+}
+
+#[derive(Debug, Serialize)]
+struct ApiKeyEntryKeyValue<'a> {
+    key: &'a str,
+}
+
+async fn upstream_response_error(response: reqwest::Response, operation: &str) -> AppError {
+    let status = response.status();
+    let text = response.text().await.unwrap_or_default();
+    AppError::Upstream(format!("CliRelay {operation} failed with {status}: {text}"))
 }

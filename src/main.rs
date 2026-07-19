@@ -55,6 +55,7 @@ async fn main() -> Result<()> {
             config.callback_url(),
         )?),
         clirelay: Arc::new(CliRelayClient::new(&config.clirelay)?),
+        api_key_mutations: Arc::new(tokio::sync::Mutex::new(())),
     };
 
     let app = routes::router(state)

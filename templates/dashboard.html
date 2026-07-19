@@ -9,7 +9,11 @@
     .api-value { display: block; max-width: 100%; padding-left: .85rem; border-left: 2px solid rgba(126, 231, 135, .45); color: var(--fg); overflow-wrap: anywhere; }
     .api-url { color: var(--green); }
     .api-secret { letter-spacing: .015em; }
+    .api-empty { color: var(--muted); }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    button.key-create { background: rgba(126, 231, 135, .12); border-color: rgba(126, 231, 135, .45); color: var(--green); }
+    button.key-rotate { background: rgba(227, 179, 65, .10); border-color: rgba(227, 179, 65, .4); color: var(--yellow); }
+    button.key-create:hover, button.key-rotate:hover { filter: brightness(1.2); }
     @media (max-width: 640px) { .top { align-items: flex-start; } .grid { grid-template-columns: 1fr; gap: 4px; } .key { margin-top: 10px; } }
 {% endblock %}
 
@@ -29,11 +33,23 @@
           <div class="key">account.created_at</div><div class="value"><time datetime="{{ created_at }}">{{ created_at }}</time></div>
           <div class="key">account.last_login_at</div><div class="value"><time datetime="{{ last_login_at }}">{{ last_login_at }}</time></div>
           <div class="key">api.base_url</div><div class="value"><span class="api-value api-url">{{ api_base_url }}/v1</span></div>
-          <div class="key">api.key</div><div class="value"><span id="api-key" class="api-value api-secret">{{ api_key }}</span></div>
+          <div class="key">api.key</div><div class="value">{% if api_key.len() > 0 %}<span id="api-key" class="api-value api-secret">{{ api_key }}</span>{% else %}<span class="api-value api-empty">not created yet</span>{% endif %}</div>
         </div>
 
         <div class="actions">
+          {% if api_key.len() > 0 %}
           <button class="copy" type="button" onclick="navigator.clipboard.writeText(document.getElementById('api-key').textContent)">Copy API key</button>
+          <form method="post" action="/gate/api-key" onsubmit="return confirm('Rotate this API key? The current key will stop working immediately.')">
+            <input type="hidden" name="action" value="rotate">
+            <input type="hidden" name="expected_key_hash" value="{{ api_key_hash }}">
+            <button class="key-rotate" type="submit">Rotate API Key</button>
+          </form>
+          {% else %}
+          <form method="post" action="/gate/api-key">
+            <input type="hidden" name="action" value="create">
+            <button class="key-create" type="submit">Get API Key</button>
+          </form>
+          {% endif %}
           <a class="button" href="{{ api_base_url }}/manage/apikey-lookup?key={{ api_key }}">Query usages</a>
           <a class="button" href="/gate/leaderboard">Leaderboard</a>
           <form method="post" action="/gate/auth/logout"><button class="logout" type="submit">Log out</button></form>

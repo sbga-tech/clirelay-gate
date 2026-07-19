@@ -19,6 +19,7 @@ pub struct DashboardTemplate<'a> {
     pub github_id: i64,
     pub avatar_url: &'a str,
     pub api_key: &'a str,
+    pub api_key_hash: &'a str,
     pub api_base_url: &'a str,
     pub created_at: &'a str,
     pub last_login_at: &'a str,

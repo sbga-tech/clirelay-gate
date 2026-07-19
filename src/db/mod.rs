@@ -17,8 +17,10 @@ pub struct User {
     pub github_name: String,
     pub github_email: String,
     pub avatar_url: String,
-    pub api_key_ciphertext: Vec<u8>,
-    pub api_key_nonce: Vec<u8>,
+    pub api_key_ciphertext: Option<Vec<u8>>,
+    pub api_key_nonce: Option<Vec<u8>>,
+    pub clirelay_api_key_id: Option<String>,
+    pub api_key_version: i64,
     pub created_at: i64,
     pub last_login_at: i64,
 }
@@ -32,6 +34,7 @@ pub struct NewUser {
     pub avatar_url: String,
     pub api_key_ciphertext: Vec<u8>,
     pub api_key_nonce: Vec<u8>,
+    pub clirelay_api_key_id: String,
 }
 
 #[derive(Debug, Clone)]
@@ -41,6 +44,13 @@ pub struct GitHubProfileUpdate {
     pub github_name: String,
     pub github_email: String,
     pub avatar_url: String,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ApiKeyUpdate<'a> {
+    pub clirelay_api_key_id: Option<&'a str>,
+    pub ciphertext: Option<&'a [u8]>,
+    pub nonce: Option<&'a [u8]>,
 }
 
 pub async fn connect(database_url: &str) -> Result<SqlitePool> {
@@ -110,21 +120,23 @@ pub async fn list_users(pool: &SqlitePool) -> Result<Vec<User>, sqlx::Error> {
     rows.into_iter().map(row_to_user).collect()
 }
 
-pub async fn insert_user(pool: &SqlitePool, user: NewUser) -> Result<User, sqlx::Error> {
+pub async fn insert_user(pool: &SqlitePool, user: &NewUser) -> Result<User, sqlx::Error> {
     let now = now_unix();
     let result = sqlx::query(
         r#"INSERT INTO users (
             github_id, github_login, github_name, github_email, avatar_url,
-            api_key_ciphertext, api_key_nonce, created_at, last_login_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
+            api_key_ciphertext, api_key_nonce, clirelay_api_key_id,
+            created_at, last_login_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
     )
     .bind(user.github_id)
-    .bind(user.github_login)
-    .bind(user.github_name)
-    .bind(user.github_email)
-    .bind(user.avatar_url)
-    .bind(user.api_key_ciphertext)
-    .bind(user.api_key_nonce)
+    .bind(&user.github_login)
+    .bind(&user.github_name)
+    .bind(&user.github_email)
+    .bind(&user.avatar_url)
+    .bind(&user.api_key_ciphertext)
+    .bind(&user.api_key_nonce)
+    .bind(&user.clirelay_api_key_id)
     .bind(now)
     .bind(now)
     .execute(pool)
@@ -158,6 +170,55 @@ pub async fn update_existing_user(
     get_user_by_github_id(pool, update.github_id)
         .await?
         .ok_or(sqlx::Error::RowNotFound)
+}
+
+pub async fn set_user_api_key(
+    pool: &SqlitePool,
+    user_id: i64,
+    update: ApiKeyUpdate<'_>,
+) -> Result<User, sqlx::Error> {
+    sqlx::query(
+        r#"UPDATE users
+           SET clirelay_api_key_id = ?, api_key_ciphertext = ?, api_key_nonce = ?,
+               api_key_version = api_key_version + 1
+           WHERE id = ?"#,
+    )
+    .bind(update.clirelay_api_key_id)
+    .bind(update.ciphertext)
+    .bind(update.nonce)
+    .bind(user_id)
+    .execute(pool)
+    .await?;
+
+    get_user_by_id(pool, user_id)
+        .await?
+        .ok_or(sqlx::Error::RowNotFound)
+}
+
+pub async fn compare_and_set_user_api_key(
+    pool: &SqlitePool,
+    user_id: i64,
+    expected_version: i64,
+    update: ApiKeyUpdate<'_>,
+) -> Result<Option<User>, sqlx::Error> {
+    let result = sqlx::query(
+        r#"UPDATE users
+           SET clirelay_api_key_id = ?, api_key_ciphertext = ?, api_key_nonce = ?,
+               api_key_version = api_key_version + 1
+           WHERE id = ? AND api_key_version = ?"#,
+    )
+    .bind(update.clirelay_api_key_id)
+    .bind(update.ciphertext)
+    .bind(update.nonce)
+    .bind(user_id)
+    .bind(expected_version)
+    .execute(pool)
+    .await?;
+
+    if result.rows_affected() == 0 {
+        return Ok(None);
+    }
+    get_user_by_id(pool, user_id).await
 }
 
 pub async fn delete_expired_oauth_states(pool: &SqlitePool) -> Result<u64, sqlx::Error> {
@@ -223,6 +284,8 @@ fn row_to_user(row: sqlx::sqlite::SqliteRow) -> Result<User, sqlx::Error> {
         avatar_url: row.try_get("avatar_url")?,
         api_key_ciphertext: row.try_get("api_key_ciphertext")?,
         api_key_nonce: row.try_get("api_key_nonce")?,
+        clirelay_api_key_id: row.try_get("clirelay_api_key_id")?,
+        api_key_version: row.try_get("api_key_version")?,
         created_at: row.try_get("created_at")?,
         last_login_at: row.try_get("last_login_at")?,
     })

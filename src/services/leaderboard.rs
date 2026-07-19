@@ -201,7 +201,9 @@ fn row_for_user(
     user: User,
     usage_by_key: &HashMap<String, UsageTotals>,
 ) -> AppResult<Option<LeaderboardRow>> {
-    let api_key = decrypt_api_key(state, &user)?;
+    let Some(api_key) = decrypt_api_key(state, &user)? else {
+        return Ok(None);
+    };
     let Some(totals) = usage_by_key.get(&api_key).copied() else {
         return Ok(None);
     };

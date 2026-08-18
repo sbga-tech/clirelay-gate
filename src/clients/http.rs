@@ -1,3 +1,3 @@
 pub fn client_builder() -> reqwest::ClientBuilder {
-    reqwest::Client::builder().user_agent("clirelay-gate")
+    reqwest::Client::builder().user_agent("cpa-portal")
 }

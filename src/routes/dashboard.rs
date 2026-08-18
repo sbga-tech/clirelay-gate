@@ -23,7 +23,7 @@ async fn index(State(state): State<AppState>, session: Session) -> AppResult<Res
 
     let api_key = decrypt_api_key(&state, &user)?;
     let created_at = format_unix_timestamp(user.created_at)?;
-    let api_base_url = state.config.clirelay.public_base_url.as_str();
+    let api_base_url = state.config.cpa.public_base_url.as_str();
     let last_login_at = format_unix_timestamp(user.last_login_at)?;
 
     render(DashboardTemplate {

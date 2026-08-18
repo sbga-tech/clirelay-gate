@@ -1,9 +1,9 @@
 [package]
-name = "clirelay-gate"
+name = "cpa-portal"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-description = "GitHub login and API key provisioning gateway for CliRelay"
+description = "GitHub login and API key provisioning portal for CPA"
 
 [dependencies]
 anyhow = "1"
@@ -20,7 +20,6 @@ octocrab = "0.51"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 serde = { version = "1", features = ["derive"] }
 secrecy = { version = "0.10", features = ["serde"] }
-serde_json = "1"
 sha2 = "0.10"
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "sqlite", "macros", "migrate", "time"] }
 thiserror = "2"

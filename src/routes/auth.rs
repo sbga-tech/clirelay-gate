@@ -19,9 +19,9 @@ const OAUTH_STATE_TTL_SECONDS: i64 = 600;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/gate/auth/github/start", get(github_start))
-        .route("/gate/auth/github/callback", get(github_callback))
-        .route("/gate/auth/logout", post(logout))
+        .route("/auth/github/start", get(github_start))
+        .route("/auth/github/callback", get(github_callback))
+        .route("/logout", post(logout))
 }
 
 async fn github_start(State(state): State<AppState>) -> AppResult<Redirect> {

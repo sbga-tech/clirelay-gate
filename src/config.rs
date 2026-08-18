@@ -38,7 +38,7 @@ impl HttpUrl {
 pub struct AppConfig {
     pub server: ServerConfig,
     pub github: GitHubConfig,
-    pub clirelay: CliRelayConfig,
+    pub cpa: CPAConfig,
     #[serde(default)]
     pub database: DatabaseConfig,
     pub security: SecurityConfig,
@@ -62,7 +62,7 @@ fn default_server_listen() -> SocketAddr {
 }
 
 fn default_site_name() -> NonEmptyString {
-    NonEmptyString::new("CliRelay Gate")
+    NonEmptyString::new("CPA Portal")
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -76,7 +76,7 @@ pub struct SessionConfig {
 impl Default for SessionConfig {
     fn default() -> Self {
         Self {
-            cookie_name: NonEmptyString::new("clirelay_gate"),
+            cookie_name: NonEmptyString::new("cpa_portal"),
             secure: true,
             ttl_seconds: NonZeroU64::new(2_592_000).unwrap(),
         }
@@ -90,14 +90,10 @@ pub struct GitHubConfig {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct CliRelayConfig {
+pub struct CPAConfig {
     pub public_base_url: HttpUrl,
     pub internal_base_url: HttpUrl,
     pub management_key: SecretString,
-    #[serde(default)]
-    pub default_permission_profile_id: String,
-    #[serde(default)]
-    pub default_allowed_channel_groups: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -109,7 +105,7 @@ pub struct DatabaseConfig {
 impl Default for DatabaseConfig {
     fn default() -> Self {
         Self {
-            url: "sqlite://./data/clirelay-gate.db".to_owned(),
+            url: "sqlite://./data/cpa-portal.db".to_owned(),
         }
     }
 }
@@ -161,14 +157,14 @@ impl AppConfig {
     pub fn load() -> Result<Self> {
         let mut builder = Config::builder().add_source(File::with_name("config").required(false));
 
-        if let Ok(path) = env::var("CLIRELAY_GATE_CONFIG")
+        if let Ok(path) = env::var("CPA_PORTAL_CONFIG")
             && !path.trim().is_empty()
         {
             builder = builder.add_source(File::with_name(&path).required(true));
         }
 
         builder
-            .add_source(Environment::with_prefix("CLIRELAY_GATE").separator("__"))
+            .add_source(Environment::with_prefix("CPA_PORTAL").separator("__"))
             .build()
             .context("build configuration")?
             .try_deserialize()
@@ -179,7 +175,7 @@ impl AppConfig {
         self.server
             .public_base_url
             .as_ref()
-            .join("/gate/auth/github/callback")
+            .join("/auth/github/callback")
             .expect("callback path must be a valid URL path")
             .to_string()
     }

@@ -102,14 +102,6 @@ pub async fn get_user_by_github_id(
     row.map(row_to_user).transpose()
 }
 
-pub async fn list_users(pool: &SqlitePool) -> Result<Vec<User>, sqlx::Error> {
-    let rows = sqlx::query("SELECT * FROM users ORDER BY github_login")
-        .fetch_all(pool)
-        .await?;
-
-    rows.into_iter().map(row_to_user).collect()
-}
-
 pub async fn insert_user(pool: &SqlitePool, user: NewUser) -> Result<User, sqlx::Error> {
     let now = now_unix();
     let result = sqlx::query(

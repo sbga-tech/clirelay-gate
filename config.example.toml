@@ -1,10 +1,10 @@
 [server]
 listen = "0.0.0.0:8080"
 public_base_url = "https://ai.example.com"
-site_name = "CliRelay Gate"
+site_name = "CPA Portal"
 
 [server.session]
-cookie_name = "clirelay_gate"
+cookie_name = "cpa_portal"
 secure = true
 ttl_seconds = 2592000
 
@@ -12,15 +12,13 @@ ttl_seconds = 2592000
 client_id = ""
 client_secret = ""
 
-[clirelay]
+[cpa]
 public_base_url = "https://ai.example.com"
 internal_base_url = "http://127.0.0.1:8317"
 management_key = ""
-default_permission_profile_id = ""
-default_allowed_channel_groups = []
 
 [database]
-url = "sqlite://./data/clirelay-gate.db"
+url = "sqlite://./data/cpa-portal.db"
 
 [security]
 # Generate 32 random bytes and encode them with base64 or base64url.

@@ -67,12 +67,8 @@ async fn update_existing_user(
 
 async fn create_user(state: &AppState, identity: github::GitHubIdentity) -> AppResult<User> {
     let api_key = crypto::generate_api_key(state.config.security.api_key_prefix.as_ref())?;
-    let key_name = format!("github:{}#{}", identity.login, identity.id);
 
-    state
-        .clirelay
-        .provision_api_key(&api_key, &key_name)
-        .await?;
+    state.cpa.provision_api_key(&api_key).await?;
 
     let encrypted = state.crypto.encrypt(&api_key)?;
     let github_id = identity.id;

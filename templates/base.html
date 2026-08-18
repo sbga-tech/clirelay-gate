@@ -52,6 +52,16 @@
     button.copy:hover { filter: brightness(1.2); }
     button.logout { background: transparent; color: var(--muted); }
     form { margin: 0; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    button:disabled, a.button[aria-disabled="true"] { cursor: wait; opacity: .65; }
+    a.button[aria-disabled="true"] { pointer-events: none; }
+    .action-status { flex-basis: 100%; display: flex; gap: .55rem; align-items: baseline; padding-top: 2px; font-size: .9rem; line-height: 1.5; }
+    .action-status[hidden] { display: none; }
+    .action-status[data-state="loading"] { color: var(--muted); }
+    .action-status[data-state="loading"] .action-status-marker { color: var(--green); }
+    .action-status[data-state="success"] { color: var(--fg); }
+    .action-status[data-state="success"] .action-status-marker { color: var(--green); }
+    .action-status[data-state="error"] { color: var(--red); }
 
     {% block page_css %}{% endblock %}
   </style>
@@ -67,6 +77,31 @@
   </main>
   <script>
     (() => {
+      window.createActionStatus = (element) => {
+        const marker = element.querySelector(".action-status-marker");
+        const message = element.querySelector(".action-status-message");
+        let hideTimer;
+
+        const hide = () => {
+          clearTimeout(hideTimer);
+          element.hidden = true;
+          delete element.dataset.state;
+          marker.textContent = "";
+          message.textContent = "";
+        };
+
+        const show = (state, markerText, messageText, autoHideMs = 0) => {
+          clearTimeout(hideTimer);
+          element.dataset.state = state;
+          marker.textContent = markerText;
+          message.textContent = messageText;
+          element.hidden = false;
+          if (autoHideMs > 0) hideTimer = setTimeout(hide, autoHideMs);
+        };
+
+        return { hide, show };
+      };
+
       const pad2 = (value) => String(value).padStart(2, "0");
       const offsetLabel = (date) => {
         const offset = -date.getTimezoneOffset();
@@ -88,5 +123,6 @@
       }
     })();
   </script>
+  {% block page_js %}{% endblock %}
 </body>
 </html>

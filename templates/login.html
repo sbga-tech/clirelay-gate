@@ -4,12 +4,36 @@
     body { font-size: 16px; }
     main { width: min(94vw, 520px); }
     h1 { margin: .4rem 0 1rem; font-size: clamp(1.8rem, 6vw, 3rem); font-weight: 800; letter-spacing: -.04em; }
-    a.button { width: 100%; margin-top: 1.5rem; padding: .9rem 1rem; }
+    .actions a.button { width: 100%; }
 {% endblock %}
 
 {% block content %}
-      <div><span class="prompt">$</span> open gate</div>
+      <div><span class="prompt">$</span> open portal</div>
       <h1>{{ site_name }}</h1>
       <p>Sign in with GitHub to receive your API key and open your self-service dashboard.</p>
-      <a class="button" href="/gate/auth/github/start">Continue with GitHub</a>
+      <div class="actions">
+        <a id="github-login" class="button" href="/auth/github/start">Continue with GitHub</a>
+        {% include "action_status.html" %}
+      </div>
+{% endblock %}
+
+{% block page_js %}
+  <script>
+    (() => {
+      const link = document.getElementById("github-login");
+      const actionStatus = window.createActionStatus(document.getElementById("action-status"));
+
+      link.addEventListener("click", (event) => {
+        if (link.getAttribute("aria-disabled") === "true") {
+          event.preventDefault();
+          return;
+        }
+
+        event.preventDefault();
+        link.setAttribute("aria-disabled", "true");
+        actionStatus.show("loading", ">", "Redirecting to GitHub...");
+        setTimeout(() => window.location.assign(link.href), 0);
+      });
+    })();
+  </script>
 {% endblock %}

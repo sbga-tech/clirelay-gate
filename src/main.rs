@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use clirelay_gate::{
-    clients::{clirelay::CliRelayClient, github::GitHubOAuthClient},
+use cpa_portal::{
+    clients::{cpa::CPAClient, github::GitHubOAuthClient},
     config::AppConfig,
     crypto::Crypto,
     db, routes,
@@ -54,7 +54,7 @@ async fn main() -> Result<()> {
             &config.github,
             config.callback_url(),
         )?),
-        clirelay: Arc::new(CliRelayClient::new(&config.clirelay)?),
+        cpa: Arc::new(CPAClient::new(&config.cpa)?),
     };
 
     let app = routes::router(state)
@@ -65,7 +65,7 @@ async fn main() -> Result<()> {
         .await
         .with_context(|| format!("bind {}", config.server.listen))?;
 
-    tracing::info!(listen = %config.server.listen, "clirelay-gate listening");
+    tracing::info!(listen = %config.server.listen, "cpa-portal listening");
     let serve_result = axum::serve(listener, app.into_make_service())
         .with_graceful_shutdown(shutdown_signal())
         .await;

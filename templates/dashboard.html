@@ -9,7 +9,8 @@
     .api-value { display: block; max-width: 100%; padding-left: .85rem; border-left: 2px solid rgba(126, 231, 135, .45); color: var(--fg); overflow-wrap: anywhere; }
     .api-url { color: var(--green); }
     .api-secret { letter-spacing: .015em; }
-    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    button.usage { background: rgba(126, 231, 135, .12); border-color: rgba(126, 231, 135, .45); color: var(--green); }
+    button.usage:hover { background: rgba(126, 231, 135, .2); }
     @media (max-width: 640px) { .top { align-items: flex-start; } .grid { grid-template-columns: 1fr; gap: 4px; } .key { margin-top: 10px; } }
 {% endblock %}
 
@@ -33,9 +34,72 @@
         </div>
 
         <div class="actions">
-          <button class="copy" type="button" onclick="navigator.clipboard.writeText(document.getElementById('api-key').textContent)">Copy API key</button>
-          <a class="button" href="{{ api_base_url }}/manage/apikey-lookup?key={{ api_key }}">Query usages</a>
-          <a class="button" href="/gate/leaderboard">Leaderboard</a>
-          <form method="post" action="/gate/auth/logout"><button class="logout" type="submit">Log out</button></form>
+          <button id="copy-api-key" class="copy" type="button">Copy API key</button>
+          <button id="query-usages" class="usage" type="button">Query usages</button>
+          <form method="post" action="/logout"><button class="logout" type="submit">Log out</button></form>
+          {% include "action_status.html" %}
         </div>
+
+{% endblock %}
+
+{% block page_js %}
+  <script>
+    (() => {
+      const copyButton = document.getElementById("copy-api-key");
+      const usageButton = document.getElementById("query-usages");
+      const logoutForm = document.querySelector('form[action="/logout"]');
+      const apiKey = document.getElementById("api-key").textContent;
+      const actionStatus = window.createActionStatus(document.getElementById("action-status"));
+
+      copyButton.addEventListener("click", async () => {
+        copyButton.disabled = true;
+        actionStatus.show("loading", ">", "Copying API key...");
+        try {
+          await navigator.clipboard.writeText(apiKey);
+          actionStatus.show("success", ">", "API key copied to clipboard.", 2500);
+        } catch (_) {
+          actionStatus.show("error", "!", "Could not copy the API key.");
+        } finally {
+          copyButton.disabled = false;
+        }
+      });
+
+      usageButton.addEventListener("click", async () => {
+        usageButton.disabled = true;
+        actionStatus.show("loading", ">", "Opening usage dashboard...");
+        try {
+          const response = await fetch("/usage/api/v1/auth/api-key-login", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CPA-Usage-Keeper-Request": "fetch",
+            },
+            body: JSON.stringify({ apiKey }),
+          });
+
+          if (response.status === 204) {
+            window.location.assign("/usage/");
+            return;
+          }
+
+          let message = "Could not open usage dashboard. Try again.";
+          if (response.status === 401) {
+            message = "Usage data for this key is not ready yet.";
+          } else if (response.status === 429) {
+            message = "Too many attempts. Try again shortly.";
+          }
+          actionStatus.show("error", "!", message);
+        } catch (_) {
+          actionStatus.show("error", "!", "Usage service is currently unreachable.");
+        } finally {
+          usageButton.disabled = false;
+        }
+      });
+
+      logoutForm.addEventListener("submit", () => {
+        actionStatus.show("loading", ">", "Signing out...");
+      });
+    })();
+  </script>
 {% endblock %}

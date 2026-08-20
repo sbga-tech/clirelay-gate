@@ -17,13 +17,13 @@ hex = "0.4"
 oauth2 = "5"
 nutype = { version = "0.7", features = ["serde"] }
 octocrab = "0.51"
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["cookies", "json", "rustls-tls"] }
 serde = { version = "1", features = ["derive"] }
 secrecy = { version = "0.10", features = ["serde"] }
 sha2 = "0.10"
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "sqlite", "macros", "migrate", "time"] }
 thiserror = "2"
-time = { version = "0.3", features = ["serde", "formatting"] }
+time = { version = "0.3", features = ["formatting", "parsing", "serde", "serde-well-known"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
 tower-http = { version = "0.6", features = ["trace"] }
 tower-sessions = "0.14"

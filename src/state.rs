@@ -3,7 +3,7 @@ use std::sync::Arc;
 use sqlx::SqlitePool;
 
 use crate::{
-    clients::{cpa::CPAClient, github::GitHubOAuthClient},
+    clients::{cpa::CPAClient, github::GitHubOAuthClient, keeper::KeeperClient},
     config::AppConfig,
     crypto::Crypto,
 };
@@ -15,4 +15,5 @@ pub struct AppState {
     pub db: SqlitePool,
     pub github: Arc<GitHubOAuthClient>,
     pub cpa: Arc<CPAClient>,
+    pub keeper: Arc<KeeperClient>,
 }

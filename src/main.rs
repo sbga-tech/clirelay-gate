@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use cpa_portal::{
-    clients::{cpa::CPAClient, github::GitHubOAuthClient},
+    clients::{cpa::CPAClient, github::GitHubOAuthClient, keeper::KeeperClient},
     config::AppConfig,
     crypto::Crypto,
     db, routes,
@@ -55,6 +55,7 @@ async fn main() -> Result<()> {
             config.callback_url(),
         )?),
         cpa: Arc::new(CPAClient::new(&config.cpa)?),
+        keeper: Arc::new(KeeperClient::new(&config.keeper)?),
     };
 
     let app = routes::router(state)

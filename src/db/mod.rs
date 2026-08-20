@@ -91,6 +91,15 @@ pub async fn get_user_by_id(pool: &SqlitePool, id: i64) -> Result<Option<User>, 
     row.map(row_to_user).transpose()
 }
 
+pub async fn list_users(pool: &SqlitePool) -> Result<Vec<User>, sqlx::Error> {
+    sqlx::query("SELECT * FROM users ORDER BY id")
+        .fetch_all(pool)
+        .await?
+        .into_iter()
+        .map(row_to_user)
+        .collect()
+}
+
 pub async fn get_user_by_github_id(
     pool: &SqlitePool,
     github_id: i64,

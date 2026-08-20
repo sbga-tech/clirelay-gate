@@ -1,7 +1,7 @@
 # CPA Portal
 
 CPA Portal 为 CPA 增加基于 GitHub 登录的多用户自助服务。
-它为每位用户创建并保存一个加密的 CPA API Key，并提供登录页和用户面板。
+它为每位用户创建并保存一个加密的 CPA API Key，并提供登录页、用户面板和只读本地排名页。
 模型请求、路由和管理功能仍由 CPA 处理；CPA Portal 不代理模型请求。
 
 ## 功能
@@ -12,17 +12,19 @@ CPA Portal 为 CPA 增加基于 GitHub 登录的多用户自助服务。
 - SQLite 持久化用户、API Key 和 OAuth 状态
 - ChaCha20-Poly1305 加密存储 API Key
 - 同源登录 CPA Usage Keeper
+- GitHub 用户可查看 CPA Usage Keeper 本地排名
 
 ## 路由
 
-CPA Portal 只注册以下路由：
+CPA Portal 注册以下路由：
 
 - `GET /`：登录页或用户面板
 - `GET /auth/github/start`：开始 GitHub OAuth 登录
 - `GET /auth/github/callback`：处理 GitHub OAuth 回调
 - `POST /logout`：退出当前会话
+- `GET /ranking`：查看只读本地排名
 
-`/usage` 和 `/usage/*` 应转发到 CPA Usage Keeper，其余路径应转发到 CPA。
+`/ranking` 和 `/ranking/*` 应转发到 CPA Portal；`/usage` 和 `/usage/*` 应转发到 CPA Usage Keeper，其余路径应转发到 CPA。
 
 ## 配置
 
@@ -48,6 +50,10 @@ public_base_url = "https://ai.example.com"
 internal_base_url = "http://cpa:8317"
 management_key = "YOUR_CPA_MANAGEMENT_KEY"
 
+[keeper]
+internal_base_url = "http://cpa-usage-keeper:8080/usage"
+login_password = ""
+
 [database]
 url = "sqlite://./data/cpa-portal.db"
 
@@ -67,6 +73,7 @@ openssl rand -base64 32
 设置 `CPA_PORTAL_CONFIG` 可指定必需的配置文件，环境变量 `CPA_PORTAL__...` 可覆盖配置项，例如：
 
 ```text
+CPA_PORTAL__KEEPER__LOGIN_PASSWORD=YOUR_KEEPER_LOGIN_PASSWORD
 CPA_PORTAL_CONFIG=/app/config.toml
 CPA_PORTAL__SERVER__PUBLIC_BASE_URL=https://ai.example.com
 CPA_PORTAL__CPA__INTERNAL_BASE_URL=http://cpa:8317
@@ -94,6 +101,7 @@ services:
       - "8080"
     environment:
       CPA_PORTAL_CONFIG: /app/config.toml
+      CPA_PORTAL__KEEPER__LOGIN_PASSWORD: ${KEEPER_LOGIN_PASSWORD:?set KEEPER_LOGIN_PASSWORD}
     volumes:
       - ./cpa-portal.toml:/app/config.toml:ro
       - ./cpa-portal-data:/app/data
@@ -102,11 +110,11 @@ services:
 ## 反向代理
 
 CPA Portal、CPA Usage Keeper 和 CPA 应位于同一站点下。
-以下 Caddy 配置让 Portal 处理登录路由，让 Keeper 处理用量页面，并将其他请求交给 CPA：
+以下 Caddy 配置让 Portal 处理登录和排名路由，让 Keeper 处理用量页面，并将其他请求交给 CPA：
 
 ```caddyfile
 ai.example.com {
-	@portal path / /auth/* /logout
+	@portal path / /auth/* /logout /ranking /ranking/*
 	handle @portal {
 		reverse_proxy cpa-portal:8080
 	}

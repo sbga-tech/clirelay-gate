@@ -9,8 +9,9 @@
     .api-value { display: block; max-width: 100%; padding-left: .85rem; border-left: 2px solid rgba(126, 231, 135, .45); color: var(--fg); overflow-wrap: anywhere; }
     .api-url { color: var(--green); }
     .api-secret { letter-spacing: .015em; }
-    button.usage { background: rgba(126, 231, 135, .12); border-color: rgba(126, 231, 135, .45); color: var(--green); }
-    button.usage:hover { background: rgba(126, 231, 135, .2); }
+    .actions { padding-top: 16px; border-top: 1px solid var(--line); }
+    button.usage, a.button.usage { color: var(--green); }
+    button.usage:hover, a.button.usage:hover { background: transparent; color: var(--green); }
     @media (max-width: 640px) { .top { align-items: flex-start; } .grid { grid-template-columns: 1fr; gap: 4px; } .key { margin-top: 10px; } }
 {% endblock %}
 
@@ -34,8 +35,9 @@
         </div>
 
         <div class="actions">
-          <button id="copy-api-key" class="copy" type="button">Copy API key</button>
-          <button id="query-usages" class="usage" type="button">Query usages</button>
+          <button id="copy-api-key" class="copy" type="button">Copy key</button>
+          <a class="button usage" href="/ranking">Ranking</a>
+          <button id="query-usages" class="usage" type="button">Usage</button>
           <form method="post" action="/logout"><button class="logout" type="submit">Log out</button></form>
           {% include "action_status.html" %}
         </div>

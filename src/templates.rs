@@ -24,6 +24,44 @@ pub struct DashboardTemplate<'a> {
     pub last_login_at: &'a str,
 }
 
+#[derive(Debug, Clone)]
+pub struct RankingOption {
+    pub value: String,
+    pub label: String,
+    pub selected: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct RankingEntry {
+    pub rank: String,
+    pub avatar_url: String,
+    pub display_name: String,
+    pub secondary_name: String,
+    pub value: String,
+    pub components: Vec<RankingComponent>,
+}
+
+#[derive(Debug, Clone)]
+pub struct RankingComponent {
+    pub label: String,
+    pub value: String,
+}
+
+#[derive(Debug, Template)]
+#[template(path = "ranking.html")]
+pub struct RankingTemplate<'a> {
+    pub site_name: &'a str,
+    pub period_label: &'a str,
+    pub metric_label: &'a str,
+    pub periods: &'a [RankingOption],
+    pub metrics: &'a [RankingOption],
+    pub generated_at: &'a str,
+    pub stale: bool,
+    pub score_explanation: &'a str,
+    pub entries: &'a [RankingEntry],
+    pub empty_message: &'a str,
+}
+
 pub(crate) fn render<T: Template>(template: T) -> AppResult<Response> {
     Ok(Html(template.render()?).into_response())
 }

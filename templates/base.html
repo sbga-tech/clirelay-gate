@@ -45,15 +45,16 @@
     .muted { color: var(--muted); }
     h1 { margin: 0; font-size: clamp(1.5rem, 4vw, 2.2rem); line-height: 1.1; letter-spacing: -.035em; }
     p { margin: 0; color: var(--muted); }
-    a.button, button { border: 1px solid var(--line); border-radius: 12px; padding: .8rem 1rem; font: inherit; font-weight: 800; cursor: pointer; text-decoration: none; }
-    a.button { display: inline-flex; align-items: center; justify-content: center; background: rgba(126, 231, 135, .12); border-color: rgba(126, 231, 135, .45); color: var(--green); }
-    a.button:focus, a.button:hover { background: rgba(126, 231, 135, .2); }
-    button.copy { background: rgba(121, 192, 255, .12); border-color: rgba(121, 192, 255, .45); color: var(--blue); }
-    button.copy:hover { filter: brightness(1.2); }
-    button.logout { background: transparent; color: var(--muted); }
+    a.button, button { appearance: none; border: 0; border-radius: 0; padding: .15rem 0; background: transparent; color: var(--fg); font: inherit; font-weight: 700; line-height: 1.5; cursor: pointer; text-decoration: none; }
+    a.button { display: inline; color: var(--blue); }
+    a.button:hover, a.button:focus, button:hover { background: transparent; text-decoration: underline; text-underline-offset: .22em; }
+    a.button:focus-visible, button:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+    button.copy { color: var(--blue); }
+    button.logout { color: var(--muted); }
+    button.logout:hover { color: var(--red); }
     form { margin: 0; }
-    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
-    button:disabled, a.button[aria-disabled="true"] { cursor: wait; opacity: .65; }
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 24px; }
+    button:disabled, a.button[aria-disabled="true"] { cursor: wait; opacity: .65; text-decoration: none; }
     a.button[aria-disabled="true"] { pointer-events: none; }
     .action-status { flex-basis: 100%; display: flex; gap: .55rem; align-items: baseline; padding-top: 2px; font-size: .9rem; line-height: 1.5; }
     .action-status[hidden] { display: none; }

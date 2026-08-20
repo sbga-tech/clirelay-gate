@@ -39,6 +39,7 @@ pub struct AppConfig {
     pub server: ServerConfig,
     pub github: GitHubConfig,
     pub cpa: CPAConfig,
+    pub keeper: KeeperConfig,
     #[serde(default)]
     pub database: DatabaseConfig,
     pub security: SecurityConfig,
@@ -94,6 +95,12 @@ pub struct CPAConfig {
     pub public_base_url: HttpUrl,
     pub internal_base_url: HttpUrl,
     pub management_key: SecretString,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct KeeperConfig {
+    pub internal_base_url: HttpUrl,
+    pub login_password: SecretString,
 }
 
 #[derive(Debug, Clone, Deserialize)]

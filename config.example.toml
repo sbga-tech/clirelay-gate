@@ -17,6 +17,10 @@ public_base_url = "https://ai.example.com"
 internal_base_url = "http://127.0.0.1:8317"
 management_key = ""
 
+[keeper]
+internal_base_url = "http://cpa-usage-keeper:8080/usage"
+login_password = ""
+
 [database]
 url = "sqlite://./data/cpa-portal.db"
 

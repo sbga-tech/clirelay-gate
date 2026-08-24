@@ -21,6 +21,9 @@ management_key = ""
 internal_base_url = "http://cpa-usage-keeper:8080/usage"
 login_password = ""
 
+[admin_api]
+token = ""
+
 [database]
 url = "sqlite://./data/cpa-portal.db"
 

@@ -40,7 +40,7 @@ pub struct AppConfig {
     pub github: GitHubConfig,
     pub cpa: CPAConfig,
     pub keeper: KeeperConfig,
-    #[serde(default)]
+    pub admin_api: AdminApiConfig,
     pub database: DatabaseConfig,
     pub security: SecurityConfig,
 }
@@ -101,6 +101,11 @@ pub struct CPAConfig {
 pub struct KeeperConfig {
     pub internal_base_url: HttpUrl,
     pub login_password: SecretString,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AdminApiConfig {
+    pub token: SecretString,
 }
 
 #[derive(Debug, Clone, Deserialize)]

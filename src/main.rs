@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use cpa_portal::{
+    admin_api::AdminApiAuth,
     clients::{cpa::CPAClient, github::GitHubOAuthClient, keeper::KeeperClient},
     config::AppConfig,
     crypto::Crypto,
@@ -48,6 +49,7 @@ async fn main() -> Result<()> {
 
     let state = AppState {
         config: Arc::clone(&config),
+        admin_api_auth: Arc::new(AdminApiAuth::new(&config.admin_api)?),
         crypto,
         db,
         github: Arc::new(GitHubOAuthClient::new(

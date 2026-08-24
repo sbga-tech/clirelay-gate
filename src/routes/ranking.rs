@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use axum::{
     Router,
     extract::{Query, State},
@@ -12,10 +10,12 @@ use time::format_description::well_known::Rfc3339;
 use tower_sessions::Session;
 
 use crate::{
-    clients::keeper::{LocalLeaderboardEntry, RankingMetric, RankingPeriod},
-    db::{self, User},
+    clients::keeper::{RankingMetric, RankingPeriod},
     error::{AppError, AppResult},
-    services::user::current_user,
+    services::{
+        ranking::{self, PortalLeaderboardEntry},
+        user::current_user,
+    },
     state::AppState,
     templates::{RankingComponent, RankingEntry, RankingOption, RankingTemplate, render},
 };
@@ -44,25 +44,17 @@ async fn index(
 
     let period = parse_period(query.period.as_deref())?;
     let metric = parse_metric(query.metric.as_deref())?;
-    let leaderboard = state.keeper.local_leaderboard(period, metric).await?;
-    let users = db::list_users(&state.db)
-        .await?
-        .into_iter()
-        .map(|user| (user.github_login.to_ascii_lowercase(), user))
-        .collect::<HashMap<_, _>>();
+    let leaderboard = ranking::local_leaderboard(&state, period, metric).await?;
 
     let generated_at = leaderboard
         .generated_at
         .format(&Rfc3339)
         .map_err(|error| AppError::Other(anyhow::anyhow!(error)))?;
-    let mut entries: Vec<RankingEntry> = leaderboard
+    let entries: Vec<RankingEntry> = leaderboard
         .entries
         .iter()
-        .filter_map(|entry| map_entry(entry, metric, &users))
+        .map(|entry| map_entry(entry, metric))
         .collect();
-    for (index, entry) in entries.iter_mut().enumerate() {
-        entry.rank = (index + 1).to_string();
-    }
     let score_explanation = if metric == RankingMetric::Overall {
         "Overall combines all metrics into one score."
     } else {
@@ -161,11 +153,7 @@ fn metric_options(selected: RankingMetric) -> Vec<RankingOption> {
     .collect()
 }
 
-fn map_entry(
-    entry: &LocalLeaderboardEntry,
-    metric: RankingMetric,
-    users: &HashMap<String, User>,
-) -> Option<RankingEntry> {
+fn map_entry(entry: &PortalLeaderboardEntry, metric: RankingMetric) -> RankingEntry {
     let components = if metric == RankingMetric::Overall {
         entry
             .metrics
@@ -204,25 +192,14 @@ fn map_entry(
         Vec::new()
     };
 
-    let login = github_login(entry)?;
-    let user = users.get(&login.to_ascii_lowercase())?;
-
-    Some(RankingEntry {
+    RankingEntry {
         rank: entry.rank.to_string(),
-        avatar_url: user.avatar_url.clone(),
-        display_name: user.github_login.clone(),
-        secondary_name: user.github_name.clone(),
+        avatar_url: entry.user.avatar_url.clone(),
+        display_name: entry.user.github_login.clone(),
+        secondary_name: entry.user.github_name.clone(),
         value: format_metric(entry.value, metric),
         components,
-    })
-}
-
-fn github_login(entry: &LocalLeaderboardEntry) -> Option<&str> {
-    entry
-        .key_alias
-        .as_deref()
-        .and_then(|alias| alias.strip_prefix("github:"))
-        .or_else(|| entry.display_name.strip_prefix("github:"))
+    }
 }
 
 fn format_metric(value: i64, metric: RankingMetric) -> String {

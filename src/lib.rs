@@ -1,3 +1,4 @@
+pub mod admin_api;
 pub mod clients;
 pub mod config;
 pub mod crypto;

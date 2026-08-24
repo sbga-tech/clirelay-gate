@@ -13,6 +13,7 @@ CPA Portal 为 CPA 增加基于 GitHub 登录的多用户自助服务。
 - ChaCha20-Poly1305 加密存储 API Key
 - 同源登录 CPA Usage Keeper
 - GitHub 用户可查看 CPA Usage Keeper 本地排名
+- 为内部 Bot 提供 Bearer 认证的只读 Admin API
 
 ## 路由
 
@@ -23,6 +24,9 @@ CPA Portal 注册以下路由：
 - `GET /auth/github/callback`：处理 GitHub OAuth 回调
 - `POST /logout`：退出当前会话
 - `GET /ranking`：查看只读本地排名
+- `GET /api/admin/v1/users`：查询 Portal 用户资料
+- `GET /api/admin/v1/ranking`：查询 Portal 用户排名
+- `GET /api/admin/v1/quota`：查询账号索引和 Keeper 原始额度缓存
 
 `/ranking` 和 `/ranking/*` 应转发到 CPA Portal；`/usage` 和 `/usage/*` 应转发到 CPA Usage Keeper，其余路径应转发到 CPA。
 
@@ -54,6 +58,9 @@ management_key = "YOUR_CPA_MANAGEMENT_KEY"
 internal_base_url = "http://cpa-usage-keeper:8080/usage"
 login_password = ""
 
+[admin_api]
+token = "YOUR_RANDOM_ADMIN_API_TOKEN"
+
 [database]
 url = "sqlite://./data/cpa-portal.db"
 
@@ -69,11 +76,14 @@ api_key_prefix = "sk-ghu-"
 openssl rand -base64 32
 ```
 
+Admin API token 应至少包含 32 字节随机数据，并与 CPA management key、Keeper 登录密码分开。可使用同一命令生成。
+
 默认加载可选的 `config.*`。
 设置 `CPA_PORTAL_CONFIG` 可指定必需的配置文件，环境变量 `CPA_PORTAL__...` 可覆盖配置项，例如：
 
 ```text
 CPA_PORTAL__KEEPER__LOGIN_PASSWORD=YOUR_KEEPER_LOGIN_PASSWORD
+CPA_PORTAL__ADMIN_API__TOKEN=YOUR_RANDOM_ADMIN_API_TOKEN
 CPA_PORTAL_CONFIG=/app/config.toml
 CPA_PORTAL__SERVER__PUBLIC_BASE_URL=https://ai.example.com
 CPA_PORTAL__CPA__INTERNAL_BASE_URL=http://cpa:8317
@@ -102,10 +112,19 @@ services:
     environment:
       CPA_PORTAL_CONFIG: /app/config.toml
       CPA_PORTAL__KEEPER__LOGIN_PASSWORD: ${KEEPER_LOGIN_PASSWORD:?set KEEPER_LOGIN_PASSWORD}
+      CPA_PORTAL__ADMIN_API__TOKEN: ${PORTAL_ADMIN_API_TOKEN:?set PORTAL_ADMIN_API_TOKEN}
     volumes:
       - ./cpa-portal.toml:/app/config.toml:ro
       - ./cpa-portal-data:/app/data
 ```
+
+Admin API 设计为 Docker 内部接口，不应加入公开反向代理规则。调用方使用：
+
+```http
+Authorization: Bearer <PORTAL_ADMIN_API_TOKEN>
+```
+
+所有 Admin API 响应均设置 `Cache-Control: no-store`。`/quota` 只读取 Keeper cache，不会触发官方额度刷新；`keeper.version`、`keeper.auto_refresh` 和 `keeper.quota_cache` 作为不透明 JSON 原样返回，由调用方按 Keeper 版本解析。
 
 ## 反向代理
 

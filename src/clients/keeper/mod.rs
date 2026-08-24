@@ -1,3 +1,6 @@
+mod api_keys;
+mod identities;
+mod quota;
 mod ranking;
 
 use std::sync::{
@@ -5,6 +8,8 @@ use std::sync::{
     atomic::{AtomicU64, Ordering},
 };
 
+pub use api_keys::{CPAAPIKeySettingsItem, CPAAPIKeySettingsResponse};
+pub use identities::{UsageIdentitiesResponse, UsageIdentity};
 pub use ranking::{
     LocalLeaderboard, LocalLeaderboardEntry, LocalLeaderboardMetrics, LocalScoreExplanation,
     RankingMetric, RankingPeriod,
@@ -89,6 +94,54 @@ impl KeeperClient {
             self.send_get(path, query, operation).await?
         };
         decode_json_response(response, operation).await
+    }
+
+    pub(super) async fn post_json<T, B>(
+        &self,
+        path: &str,
+        body: &B,
+        operation: &'static str,
+    ) -> AppResult<T>
+    where
+        T: DeserializeOwned,
+        B: Serialize + ?Sized,
+    {
+        let (observed_generation, response) = {
+            let _guard = self.inner.auth_lock.read().await;
+            let observed_generation = self.inner.auth_generation.load(Ordering::Acquire);
+            let response = self.send_post(path, body, operation).await?;
+            (observed_generation, response)
+        };
+        if response.status() != StatusCode::UNAUTHORIZED {
+            return decode_json_response(response, operation).await;
+        }
+        drain_response(response).await;
+
+        self.refresh_auth(observed_generation).await?;
+        let response = {
+            let _guard = self.inner.auth_lock.read().await;
+            self.send_post(path, body, operation).await?
+        };
+        decode_json_response(response, operation).await
+    }
+
+    async fn send_post<B>(
+        &self,
+        path: &str,
+        body: &B,
+        operation: &'static str,
+    ) -> AppResult<Response>
+    where
+        B: Serialize + ?Sized,
+    {
+        self.inner
+            .http
+            .post(self.url(path)?)
+            .header(REQUEST_INTENT_HEADER, REQUEST_INTENT_FETCH)
+            .json(body)
+            .send()
+            .await
+            .map_err(|error| keeper_request_error(operation, error))
     }
 
     async fn send_get(

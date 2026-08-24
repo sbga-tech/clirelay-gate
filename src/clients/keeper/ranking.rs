@@ -1,6 +1,6 @@
 use std::{collections::HashMap, str::FromStr};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
 use super::KeeperClient;
@@ -8,7 +8,7 @@ use crate::error::AppResult;
 
 const LOCAL_LEADERBOARD_PATH: &str = "ranking/local/leaderboards";
 
-#[derive(Debug, Copy, Clone, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Deserialize, Serialize, Eq, PartialEq)]
 pub enum RankingPeriod {
     #[serde(rename = "today")]
     Today,
@@ -45,7 +45,7 @@ impl FromStr for RankingPeriod {
     }
 }
 
-#[derive(Debug, Copy, Clone, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Deserialize, Serialize, Eq, PartialEq)]
 pub enum RankingMetric {
     #[serde(rename = "overall")]
     Overall,
